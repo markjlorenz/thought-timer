@@ -1,4 +1,4 @@
-#include "ble.h"
+#include "Ble.h"
 #include <ArduinoBLE.h>
 
 #include <esp_log.h>
@@ -11,10 +11,14 @@ class BleImpl {
     BleImpl() :
         buttonService("00001234-0000-1000-8000-00805f9b34fb")
         ,buttonCharacteristic("00001235-0000-1000-8000-00805f9b34fb", BLERead | BLENotify)
+        ,batteryCharacteristic("00001236-0000-1000-8000-00805f9b34fb", BLERead | BLENotify, 10)
     { }
 
     BLEService buttonService;
     BLEUnsignedIntCharacteristic buttonCharacteristic;
+    BLEStringCharacteristic batteryCharacteristic;
+
+    std::string prevBattery;
 
     void setup();
     void loop();
@@ -32,7 +36,10 @@ void BleImpl::setup() {
     }
 
     buttonService.addCharacteristic(buttonCharacteristic);
+    buttonService.addCharacteristic(batteryCharacteristic);
     BLE.addService(buttonService);
+
+    batteryCharacteristic.writeValue("UNSET");
 
     // Build scan response data packet
     BLEAdvertisingData scanData;
@@ -56,10 +63,16 @@ void Ble::writeButton(unsigned long  time) {
     pImpl->buttonCharacteristic.writeValue(time);
 }
 
+void Ble::writeBattery(std::string battery) {
+    if (battery == pImpl->prevBattery) { return; }
+    pImpl->batteryCharacteristic.writeValue(battery.c_str());
+    pImpl->prevBattery = battery;
+}
+
 void Ble::sleep() { pImpl->sleep(); }
 void BleImpl::sleep() {
     if (BLE.connected()) {
-    BLE.disconnect();
+        BLE.disconnect();
     }
 
     BLE.end();

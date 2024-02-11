@@ -1,6 +1,6 @@
 #pragma once
-
 #include <Arduino.h>
+#include <string>
 
 class BleImpl;
 
@@ -16,9 +16,5 @@ class Ble {
         void loop();
         void sleep();
         void writeButton(unsigned long time);
-
-        // UBaseType_t getHighWaterMark(TaskHandle_t taskHandle);
-        // std::string getHeapStats();
-
-        // std::string getAllStats();
+        void writeBattery(std::string battery);
 };

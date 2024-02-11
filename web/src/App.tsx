@@ -18,7 +18,6 @@ import Grid from "@mui/material/Grid";
 import Button from '@mui/material/Button';
 import Input from '@mui/material/Input';
 
-
 const HistogramPlot = () => {
   const [chartOptions, setChartOptions] = useState<Highcharts.Options>({
     chart: {
@@ -46,16 +45,16 @@ const HistogramPlot = () => {
   });
 
   const [buttonDisabled, setButtonDisabled] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('Not connected');
+  const [connectionStatus, setConnectionStatus] = useState('NOT CONNECTED');
   const [values, setValues] = useState<number[]>([]);
   const [bucketSize, setBucketSize] = useState(200);
+  const [battery, setBattery] = useState('NOT CONNECTED');
 
   useEffect(() => {
     const updateChart = () => {
       const counts: { [key: number]: number }  = {};
       values.forEach((val, idx)=> {
         if (idx == 0) { return }
-        console.log(val, values[idx - 1])
         const bucket = Math.floor((val - values[idx - 1]) / bucketSize) * bucketSize;
         counts[bucket] = counts[bucket] ? counts[bucket] + 1 : 1;
       });
@@ -84,22 +83,28 @@ const HistogramPlot = () => {
 
   const connectToDevice = async () => {
     try {
-      console.log("H1O");
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: ['00001234-0000-1000-8000-00805f9b34fb'] }]
       });
       const server = await device.gatt!.connect();
       const service = await server.getPrimaryService('00001234-0000-1000-8000-00805f9b34fb');
-      const characteristic = await service.getCharacteristic('00001235-0000-1000-8000-00805f9b34fb');
-      console.log("H2O");
 
-      characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
-      await characteristic.startNotifications();
-      console.log("H3O");
+      const buttonCharacteristic = await service.getCharacteristic('00001235-0000-1000-8000-00805f9b34fb');
+      buttonCharacteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
+      await buttonCharacteristic.startNotifications();
+
+      const batteryCharacteristic = await service.getCharacteristic('00001236-0000-1000-8000-00805f9b34fb');
+      batteryCharacteristic.addEventListener('characteristicvaluechanged', handleBatteryCharacteristicValueChanged);
+      await batteryCharacteristic.startNotifications();
 
       setConnectionStatus('Connected');
       setButtonDisabled(true);
-      console.log("HO");
+
+      const batteryValue = await batteryCharacteristic.readValue();
+      const decoder = new TextDecoder('utf-8');
+      const stringValue = decoder.decode(batteryValue);
+      setBattery(stringValue + " Volts");
+
     } catch (error) {
       console.error('Error:', error);
       setConnectionStatus('Error: ' + error);
@@ -109,6 +114,14 @@ const HistogramPlot = () => {
   const handleCharacteristicValueChanged = (event: Event) => {
     const value = new Uint32Array((event.target! as BluetoothRemoteGATTCharacteristic).value!.buffer).reverse()[0];
     setValues(prevValues => [...prevValues, value]);
+  };
+
+  const handleBatteryCharacteristicValueChanged = (event: Event) => {
+    const batteryValue = (event.target! as BluetoothRemoteGATTCharacteristic).value!;
+    const decoder = new TextDecoder('utf-8');
+    const stringValue = decoder.decode(batteryValue);
+
+    setBattery(stringValue + " Volts");
   };
 
   const handleBucketSizeChange = (event: ChangeEvent & {target: HTMLInputElement | HTMLTextAreaElement}) => {
@@ -122,12 +135,18 @@ const HistogramPlot = () => {
           justifyContent="space-between"
         >
           <Grid item
-            xs={6}
+            xs={3}
           >
             <Button onClick={connectToDevice} disabled={buttonDisabled}>
               Connect to BLE Peripheral
             </Button>
             <p id="connectionStatus" className={!buttonDisabled ? "disabled" : undefined}>Status: {connectionStatus}</p>
+          </Grid>
+
+          <Grid item
+            xs={3}
+          >
+            <p id="battery" className={!buttonDisabled ? "disabled" : undefined}>🔋: {battery}</p>
           </Grid>
 
           <Grid item

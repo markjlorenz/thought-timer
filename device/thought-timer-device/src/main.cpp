@@ -4,8 +4,6 @@
 #include <esp_log.h>
 static const char* TAG = "main";
 
-// const gpio_num_t ledPin = GPIO_NUM_5;
-// const gpio_num_t buttonPin = GPIO_NUM_14;
 const gpio_num_t ledPin = GPIO_NUM_11;
 const gpio_num_t buttonPin = GPIO_NUM_3;
 
@@ -20,20 +18,13 @@ void sleepTask(void *);
 
 #include <Ble.h>
 Ble ble;
-// #include <ArduinoBLE.h>
-// BLEService buttonService("00001234-0000-1000-8000-00805f9b34fb");
-// BLEUnsignedIntCharacteristic buttonCharacteristic("00001235-0000-1000-8000-00805f9b34fb", BLERead | BLENotify);
 
-// #include <UMS3.h>
+#include <Battery.h>
+Battery battery;
 
 void deepSleep() {
   ESP_LOGI(TAG, "Going into deep sleep...");
 
-  // if (BLE.connected()) {
-  //   BLE.disconnect();
-  // }
-
-  // BLE.end();
   ble.sleep();
 
   esp_sleep_enable_ext0_wakeup(buttonPin, LOW); // Enable wakeup on button press
@@ -43,26 +34,8 @@ void deepSleep() {
 void setup() {
   Serial.begin(115200);
 
+  battery.setup();
   ble.setup();
-  // if (!BLE.begin()) {
-  //   ESP_LOGE(TAG, "failed to initialize BLE!");
-  //   while (1);
-  // }
-
-  // buttonService.addCharacteristic(buttonCharacteristic);
-  // BLE.addService(buttonService);
-
-  // // Build scan response data packet
-  // BLEAdvertisingData scanData;
-  // scanData.setLocalName("Thought Timer");
-  // BLE.setScanResponseData(scanData);
-
-  // // Build advertising data packet
-  // BLEAdvertisingData advData;
-  // advData.setAdvertisedService(buttonService);
-  // BLE.setAdvertisingData(advData);
-
-  // BLE.advertise();
 
   // Set the LED pin as an output
   pinMode(ledPin,       OUTPUT);
@@ -72,7 +45,7 @@ void setup() {
   xTaskCreatePinnedToCore(
     blinkTask
     ,"Blink Task"
-    ,taskUnit * 2
+    ,taskUnit * 3
     ,NULL
     ,10
     ,&blinkTaskHandle
@@ -92,12 +65,14 @@ void setup() {
 
 void loop() {
   ble.loop();
-  // BLE.poll();
   vTaskDelay(100 / portTICK_PERIOD_MS); //miliseconds
 }
 
 void blinkTask(void* parameter) {
   bool buttonDown = false;
+
+  ble.writeButton(millis());
+  ble.writeBattery(battery.check());
 
   while(true) {
     if (digitalRead(buttonPin) == LOW && !buttonDown) {
@@ -106,9 +81,10 @@ void blinkTask(void* parameter) {
       digitalWrite(ledPin, HIGH);
       digitalWrite(LED_BUILTIN, HIGH);
       ESP_LOGI(TAG, "BLINK");
+      ESP_LOGI(TAG, "%s", battery.check().c_str());
 
       ble.writeButton(millis());
-      // buttonCharacteristic.writeValue(millis());
+      ble.writeBattery(battery.check());
 
       vTaskDelay(500 / portTICK_PERIOD_MS); //miliseconds
       continue;
