@@ -13,3 +13,8 @@ The Thought Timer is a little device to was built to help measure this question 
 - Hold the device comfortably in your hand.  Each time you notice an abrupt change in your train of thought or a cycle restarts, press the thumb buttom.
 
 - The webpage will start to build a histogram of the time between train of thought cycles.
+
+
+## Deployed Web App
+
+Deployed web app is available here: https://thought-timer.web.app
