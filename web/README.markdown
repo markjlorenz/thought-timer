@@ -1,12 +1,22 @@
 # Webserver
 
-## www Development Server
+### Setup
+
 ```
-docker run --rm -it \
-  --publish 8080:80 \
-  --volume "$PWD/www":/opt/bitnami/nginx/html:ro \
-  --volume "$PWD/nginx/conf/nginx.conf":/opt/bitnami/nginx/conf/nginx.conf:ro \
-  bitnami/nginx:1.19
+docker run -it --rm \
+  --volume "$PWD":/www \
+soodesune/node-18-vitejs-python add highcharts-react-official highcharts
+
+docker run -it --rm \
+  --volume "$PWD":/www \
+soodesune/node-18-vitejs-python add --save-dev @types/web-bluetooth
 ```
 
+### Run the development server
 
+```
+docker run -it --rm \
+  --publish 3000:5173 \
+  --volume "$PWD":/www \
+soodesune/node-18-vitejs-python dev --host
+```

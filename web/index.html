@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thought Timer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="en"> -->
+<!-- <head> -->
+<!--   <meta charset="UTF&#45;8"> -->
+<!--   <meta name="viewport" content="width=device&#45;width, initial&#45;scale=1.0"> -->
+<!--   <title>Web Bluetooth Example</title> -->
+<!-- </head> -->
+<!-- <body> -->
+<!--   <button id="connectButton">Connect to BLE Peripheral</button> -->
+<!--   <p>Status: <span id="status">Not connected</span></p> -->
+<!--  -->
+<!--   <script> -->
+<!--     // Function to handle connection to the BLE peripheral -->
+<!--     async function connect() { -->
+<!--       try { -->
+<!--         // Request BLE device to connect -->
+<!--         const device = await navigator.bluetooth.requestDevice({ -->
+<!--           filters: [{ services: ['00001234&#45;0000&#45;1000&#45;8000&#45;00805f9b34fb'] }] -->
+<!--         }); -->
+<!--  -->
+<!--         // Connect to GATT server -->
+<!--         const server = await device.gatt.connect(); -->
+<!--  -->
+<!--         // Get the LED characteristic -->
+<!--         const service = await server.getPrimaryService('00001234&#45;0000&#45;1000&#45;8000&#45;00805f9b34fb'); -->
+<!--         const characteristic = await service.getCharacteristic('00001235&#45;0000&#45;1000&#45;8000&#45;00805f9b34fb'); -->
+<!--  -->
+<!--         // Read the value of the characteristic -->
+<!--         const value = await characteristic.readValue(); -->
+<!--         const ledValue = new Uint32Array(value.buffer).reverse(); -->
+<!--  -->
+<!--         // Update status -->
+<!--         document.getElementById('status').innerText = 'Connected. LED value: ' + ledValue; -->
+<!--         ele = document.getElementById('status') -->
+<!--  -->
+<!--         // Handle notifications if needed -->
+<!--         characteristic.addEventListener('characteristicvaluechanged', (event) => { -->
+<!--  -->
+<!--           const littleEndianValue = new Uint32Array(event.target.value.buffer).reverse(); -->
+<!--  -->
+<!--           // ele.innerText = 'Connected. LED value: ' + littleEndianValue[0]; -->
+<!--           ele.innerText = 'Connected. LED value: ' + littleEndianValue; -->
+<!--           // Update status or perform other actions based on the new value -->
+<!--         }); -->
+<!--         await characteristic.startNotifications(); // Enable notifications -->
+<!--       } catch (error) { -->
+<!--         console.error('Error:', error); -->
+<!--         document.getElementById('status').innerText = 'Error: ' + error; -->
+<!--       } -->
+<!--     } -->
+<!--  -->
+<!--     // Event listener for the connect button -->
+<!--     document.getElementById('connectButton').addEventListener('click', () => { -->
+<!--       connect(); -->
+<!--     }); -->
+<!--   </script> -->
+<!-- </body> -->
+<!-- </html> -->
+<!--  -->

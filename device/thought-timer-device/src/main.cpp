@@ -1,13 +1,13 @@
-// Include necessary libraries
 #include <Arduino.h>
 #include <esp_sleep.h>
 
 #include <esp_log.h>
 static const char* TAG = "main";
 
-// Define the pin number for the LED
-const gpio_num_t ledPin = GPIO_NUM_5;
-const gpio_num_t buttonPin = GPIO_NUM_14;
+// const gpio_num_t ledPin = GPIO_NUM_5;
+// const gpio_num_t buttonPin = GPIO_NUM_14;
+const gpio_num_t ledPin = GPIO_NUM_11;
+const gpio_num_t buttonPin = GPIO_NUM_3;
 
 BaseType_t pinCore = tskNO_AFFINITY; // 1
 const int taskUnit = 1024;
@@ -18,14 +18,24 @@ void blinkTask(void *);
 TaskHandle_t sleepTaskHandle;
 void sleepTask(void *);
 
-#include <ArduinoBLE.h>
-BLEService buttonService("00001234-0000-1000-8000-00805f9b34fb");
-BLEUnsignedIntCharacteristic buttonCharacteristic("00001235-0000-1000-8000-00805f9b34fb", BLERead | BLENotify);
+#include <Ble.h>
+Ble ble;
+// #include <ArduinoBLE.h>
+// BLEService buttonService("00001234-0000-1000-8000-00805f9b34fb");
+// BLEUnsignedIntCharacteristic buttonCharacteristic("00001235-0000-1000-8000-00805f9b34fb", BLERead | BLENotify);
 
+// #include <UMS3.h>
 
-// Function to put the board into deep sleep mode
 void deepSleep() {
-  Serial.println("Going into deep sleep...");
+  ESP_LOGI(TAG, "Going into deep sleep...");
+
+  // if (BLE.connected()) {
+  //   BLE.disconnect();
+  // }
+
+  // BLE.end();
+  ble.sleep();
+
   esp_sleep_enable_ext0_wakeup(buttonPin, LOW); // Enable wakeup on button press
   esp_deep_sleep_start();
 }
@@ -33,30 +43,31 @@ void deepSleep() {
 void setup() {
   Serial.begin(115200);
 
-  if (!BLE.begin()) {
-    Serial.println("failed to initialize BLE!");
-    while (1);
-  }
+  ble.setup();
+  // if (!BLE.begin()) {
+  //   ESP_LOGE(TAG, "failed to initialize BLE!");
+  //   while (1);
+  // }
 
-  buttonService.addCharacteristic(buttonCharacteristic);
-  BLE.addService(buttonService);
+  // buttonService.addCharacteristic(buttonCharacteristic);
+  // BLE.addService(buttonService);
 
-  // Build scan response data packet
-  BLEAdvertisingData scanData;
-  scanData.setLocalName("Thought Timer");
-  BLE.setScanResponseData(scanData);
+  // // Build scan response data packet
+  // BLEAdvertisingData scanData;
+  // scanData.setLocalName("Thought Timer");
+  // BLE.setScanResponseData(scanData);
 
-  // Build advertising data packet
-  BLEAdvertisingData advData;
-  advData.setAdvertisedService(buttonService);
-  BLE.setAdvertisingData(advData);
+  // // Build advertising data packet
+  // BLEAdvertisingData advData;
+  // advData.setAdvertisedService(buttonService);
+  // BLE.setAdvertisingData(advData);
 
-  BLE.advertise();
+  // BLE.advertise();
 
   // Set the LED pin as an output
-  pinMode(ledPin, OUTPUT);
-  pinMode(buttonPin, INPUT_PULLUP);
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(ledPin,       OUTPUT);
+  pinMode(LED_BUILTIN,  OUTPUT);
+  pinMode(buttonPin,    INPUT_PULLUP);
 
   xTaskCreatePinnedToCore(
     blinkTask
@@ -80,7 +91,8 @@ void setup() {
 }
 
 void loop() {
-  BLE.poll();
+  ble.loop();
+  // BLE.poll();
   vTaskDelay(100 / portTICK_PERIOD_MS); //miliseconds
 }
 
@@ -91,12 +103,12 @@ void blinkTask(void* parameter) {
     if (digitalRead(buttonPin) == LOW && !buttonDown) {
       buttonDown = true;
 
-      // LED ON
       digitalWrite(ledPin, HIGH);
       digitalWrite(LED_BUILTIN, HIGH);
       ESP_LOGI(TAG, "BLINK");
 
-      buttonCharacteristic.writeValue(millis());
+      ble.writeButton(millis());
+      // buttonCharacteristic.writeValue(millis());
 
       vTaskDelay(500 / portTICK_PERIOD_MS); //miliseconds
       continue;
@@ -106,7 +118,6 @@ void blinkTask(void* parameter) {
       buttonDown = false;
     }
 
-    // Turn the LED off
     digitalWrite(ledPin, LOW);
     digitalWrite(LED_BUILTIN, LOW);
     vTaskDelay(100 / portTICK_PERIOD_MS); //miliseconds
@@ -114,7 +125,8 @@ void blinkTask(void* parameter) {
 }
 
 void sleepTask(void* parameter) {
-  const unsigned long inactivityThreshold = 240000; // 60 seconds
+  const unsigned long inactivityThreshold = 240000; // 4 minutes
+  // const unsigned long inactivityThreshold = 10000; // 10 seconds
   unsigned long lastActivityTime = millis();
   int lastState = digitalRead(buttonPin);
 
@@ -125,7 +137,6 @@ void sleepTask(void* parameter) {
     lastState = digitalRead(buttonPin);
 
     if (millis() - lastActivityTime >= inactivityThreshold) {
-      ESP_LOGI(TAG, "No activity for 60 seconds, going to sleep...");
       vTaskDelay(100 / portTICK_PERIOD_MS); // Small delay for stability
       deepSleep(); // Enter deep sleep mode
     }

@@ -1,0 +1,57 @@
+body { display: block !important; padding: 2em;  }
+body { background-color: rgb(41,41,42); }
+
+[data-highcharts-chart] {
+  /* drop-shadow(4px, 4px, 5px, black); */
+  box-shadow: 0px 0px 6px #111;
+}
+img {
+  /* width: 100%; */
+  box-shadow: 0px 0px 6px #111;
+  /* drop-shadow: (4px, 4px, 5px, black); */
+}
+
+/* label span.MuiTypography-root
+, label.MuiFormLabel-root
+, input.MuiInputBase-input
+, button.MuiButtonBase-root {
+  color: rgb(160, 160, 163);
+} */
+
+/* div.MuiInputBase-root.MuiInput-root.MuiInput-underline:before {
+  border-bottom: 1px solid rgb(160, 160, 163);
+} */
+
+/* div.MuiDialog-container .MuiPaper-root
+{
+  background-color: rgb(91,91,93);
+  color: wheat;
+} */
+
+/* div.MuiDialog-container p {
+  color: rgb(160, 160, 163);
+} */
+
+label[for=bucketSize] {
+  color: wheat
+}
+input[type=number] {
+  color: wheat;
+  text-align: center;
+  font-size: 2em;
+}
+
+button.MuiButton-textPrimary {
+  border: 1px solid blue;
+  color: wheat;
+}
+
+button.MuiButton-textPrimary[disabled] {
+  border: none;
+}
+
+#connectionStatus:not(.disabled) {
+  color: wheat;
+  font-weight: bold;
+}
+
