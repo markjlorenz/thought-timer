@@ -97,8 +97,10 @@ const HistogramPlot = () => {
       batteryCharacteristic.addEventListener('characteristicvaluechanged', handleBatteryCharacteristicValueChanged);
       await batteryCharacteristic.startNotifications();
 
-      setConnectionStatus('Connected');
+      setConnectionStatus('CONNECTED');
       setButtonDisabled(true);
+
+      device.addEventListener('gattserverdisconnected', onDisconnected);
 
       const batteryValue = await batteryCharacteristic.readValue();
       const decoder = new TextDecoder('utf-8');
@@ -110,6 +112,12 @@ const HistogramPlot = () => {
       setConnectionStatus('Error: ' + error);
     }
   };
+
+  // Function called when the device is disconnected
+  function onDisconnected(_event: Event) {
+      setConnectionStatus('NOT CONNECTED');
+      setButtonDisabled(false);
+  }
 
   const handleCharacteristicValueChanged = (event: Event) => {
     const value = new Uint32Array((event.target! as BluetoothRemoteGATTCharacteristic).value!.buffer).reverse()[0];

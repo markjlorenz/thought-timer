@@ -16,6 +16,9 @@ void blinkTask(void *);
 TaskHandle_t sleepTaskHandle;
 void sleepTask(void *);
 
+TaskHandle_t bootTaskHandle;
+void bootTask(void *);
+
 #include <Ble.h>
 Ble ble;
 
@@ -47,7 +50,7 @@ void setup() {
     ,"Blink Task"
     ,taskUnit * 3
     ,NULL
-    ,10
+    ,5
     ,&blinkTaskHandle
     ,pinCore
   );
@@ -59,6 +62,16 @@ void setup() {
     ,NULL
     ,10
     ,&sleepTaskHandle
+    ,pinCore
+  );
+
+  xTaskCreatePinnedToCore(
+    bootTask
+    ,"Boot Task"
+    ,taskUnit * 2
+    ,NULL
+    ,1
+    ,&bootTaskHandle
     ,pinCore
   );
 }
@@ -119,4 +132,22 @@ void sleepTask(void* parameter) {
 
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
+}
+
+void bootTask(void* parameter) {
+  int blinkCount = 5 * 2;
+  const int blinkDelay = 100; // milliseconds
+  uint8_t state = HIGH;
+
+  while(blinkCount) {
+    blinkCount--;
+    state ^= 1;
+
+    digitalWrite(ledPin, state);
+    digitalWrite(LED_BUILTIN, state);
+
+    vTaskDelay(blinkDelay / portTICK_PERIOD_MS);
+  }
+
+   vTaskDelete(NULL);
 }
